@@ -3,61 +3,57 @@ const Movie = require("../models/Movie.model");
 
 const router = require("express").Router();
 
-router.get("/", (req, res) => {
-  Movie.find().then((allMovies) => {
-    res.render("movies/movies", { allMovies });
-  });
+router.get("/", async (req, res) => {
+  const allMovies = await Movie.find();
+  res.render("movies/movies", { allMovies });
 });
 
-router.get("/create", (req, res) => {
-  Celeb.find().then((allCelebs) => {
-    res.render("movies/new-movie", { allCelebs });
-  });
+router.get("/create", async (req, res) => {
+  const allCelebs = await Celeb.find();
+  res.render("movies/new-movie", { allCelebs });
 });
 
-router.post("/create", (req, res) => {
+router.post("/create", async (req, res) => {
   const { title, genre, plot, cast } = req.body;
-  Movie.create({
-    title,
-    genre,
-    plot,
-    cast,
-  })
-    .then(() => {
-      res.redirect("/movies");
-    })
-    .catch((err) => {
-      console.error("Error: ", err);
-      res.redirect("/movies/create");
+
+  try {
+    await Movie.create({
+      title,
+      genre,
+      plot,
+      cast,
     });
+    res.redirect("/movies");
+  } catch (err) {
+    console.error("Error: ", err);
+    res.redirect("/movies/create");
+  }
 });
 
-router.get("/:id", (req, res) => {
-  Movie.findById(req.params.id)
-    .populate("cast")
-    .then((singleMovie) => {
-      if (!singleMovie) {
-        res.redirect("/");
-      }
+router.get("/:id", async (req, res) => {
+  try {
+    const singleMovie = await Movie.findById(req.params.id).populate("cast");
 
-      res.render("movies/movie-details", { singleMovie });
-    })
-    .catch((err) => {
-      console.error("Error: ", err);
+    if (!singleMovie) {
       res.redirect("/");
-    });
+    }
+
+    res.render("movies/movie-details", { singleMovie });
+  } catch (error) {
+    console.error("Error: ", err);
+    res.redirect("/");
+  }
 });
 
-router.post("/:id/delete", (req, res) => {
+router.post("/:id/delete", async (req, res) => {
   //   Movie.deleteOne({ _id: new mongoose.mongo.ObjectId(req.params.id) })
-  Movie.findByIdAndDelete(req.params.id)
-    .then(() => {
-      res.redirect("/movies");
-    })
-    .catch((err) => {
-      console.error("Error: ", err);
-      res.redirect("/");
-    });
+  try {
+    await Movie.findByIdAndDelete(req.params.id);
+    res.redirect("/movies");
+  } catch (error) {
+    console.error("Error: ", err);
+    res.redirect("/");
+  }
 });
 
 module.exports = router;
